@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simultaneous HUSTLE</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        :root {
+            --p1-color: #f87171; /* Red 400 */
+            --p2-color: #34d399; /* Emerald 400 */
+            --bg-dark: #1f2937;
+        }
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            /* Prevent text selection during gameplay */
+            user-select: none; 
+        }
+        .text-neon-red { color: var(--p1-color); }
+        .text-neon-green { color: var(--p2-color); }
+        .game-screen {
+            min-height: 80vh;
+            background: linear-gradient(145deg, #111827, #2d3748);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .hp-bar-fill {
+            transition: width 0.5s ease-out;
+            border-radius: 9999px;
+            height: 100%;
+        }
+        .move-button {
+            border: 3px solid;
+            transition: all 0.1s;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+            height: 4rem; /* Fixed height for better alignment */
+        }
+        .move-button:hover:not(.selected) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+        }
+        .move-button.selected {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+            box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.8);
+        }
+        .p1-selected { border-color: var(--p1-color) !important; background-color: rgba(248, 113, 113, 0.3) !important; }
+        .p2-selected { border-color: var(--p2-color) !important; background-color: rgba(52, 211, 153, 0.3) !important; }
+
+        .character-icon {
+            font-size: 3rem;
+            transition: left 0.3s ease-in-out, transform 0.1s ease-in-out;
+            position: absolute;
+            bottom: 10px;
+        }
+        .player-move-hint {
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .player-move-hint.visible {
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body class="p-4 flex items-center justify-center min-h-screen">
+
+    <div id="game-container" class="w-full max-w-4xl p-6 rounded-xl game-screen shadow-2xl">
+        
+        <!-- Header & Health Bars -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="w-1/2 pr-2">
+                <h2 class="text-sm md:text-xl text-neon-red mb-1">P1 (Red) - <span id="p1-meter" class="text-xs">Meter: 0</span></h2>
+                <div class="h-6 border-4 border-neon-red bg-gray-600 rounded-full overflow-hidden">
+                    <div id="p1-hp" class="hp-bar-fill bg-red-500" style="width: 100%;"></div>
+                </div>
+            </div>
+            <div class="w-1/2 pl-2 text-right">
+                <h2 class="text-sm md:text-xl text-neon-green mb-1">P2 (Green) - <span id="p2-meter" class="text-xs">Meter: 0</span></h2>
+                <div class="h-6 border-4 border-neon-green bg-gray-600 rounded-full overflow-hidden">
+                    <div id="p2-hp" class="hp-bar-fill bg-emerald-500" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Arena and Position Tracker -->
+        <div id="arena" class="relative h-28 bg-gray-900 border-4 border-gray-700 rounded-lg mb-6 flex items-center justify-center">
+            <div id="p1-char" class="character-icon text-neon-red" style="left: 10%;">👊</div>
+            <div id="p2-char" class="character-icon text-neon-green" style="left: 80%; transform: scaleX(-1);">🦵</div>
+            <div id="distance-indicator" class="text-xl text-yellow-400 absolute top-0 mt-2">Distance: 7</div>
+        </div>
+
+        <!-- Result/Status Message -->
+        <div id="status-message" class="h-12 flex items-center justify-center text-center text-lg md:text-2xl mb-6 text-yellow-300 bg-gray-800 rounded p-2">
+            SELECT YOUR MOVES & CLICK EXECUTE!
+        </div>
+        
+        <!-- Move Selection Area -->
+        <div id="move-selection" class="space-y-6">
+
+            <!-- P1 Controls (Left Side) -->
+            <div class="p-4 bg-gray-800 rounded-lg border-2 border-neon-red">
+                <h3 class="text-lg mb-3 text-neon-red">Player 1 (Red)</h3>
+                <!-- Row 1: Attack Moves -->
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="PUNCH">Punch (0M)</button>
+                    <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="KICK">Kick (10M)</button>
+                    <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-700 hover:bg-red-500" data-player="p1" data-move="THROW">Throw (10M)</button>
+                </div>
+                <!-- Row 2: Defensive/Positional Moves -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="BLOCK">Block (0M)</button>
+                    <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="FEINT">Feint (0M)</button>
+                    <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="DASH">Dash Fwd (0M)</button>
+                </div>
+                <div id="p1-hint" class="player-move-hint text-xs mt-2 text-right text-red-300">Move Selected!</div>
+            </div>
+
+            <!-- P2 Controls (Right Side) -->
+            <div class="p-4 bg-gray-800 rounded-lg border-2 border-neon-green">
+                <h3 class="text-lg mb-3 text-neon-green text-right">Player 2 (Green)</h3>
+                <!-- Row 1: Attack Moves -->
+                <div class="grid grid-cols-3 gap-2 mb-2">
+                    <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="PUNCH">Punch (0M)</button>
+                    <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="KICK">Kick (10M)</button>
+                    <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-700 hover:bg-emerald-500" data-player="p2" data-move="THROW">Throw (10M)</button>
+                </div>
+                <!-- Row 2: Defensive/Positional Moves -->
+                <div class="grid grid-cols-3 gap-2">
+                    <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="BLOCK">Block (0M)</button>
+                    <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="FEINT">Feint (0M)</button>
+                    <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="DASH">Dash Fwd (0M)</button>
+                </div>
+                <div id="p2-hint" class="player-move-hint text-xs mt-2 text-right text-emerald-300">Move Selected!</div>
+            </div>
+            
+            <!-- Execute Turn Button -->
+            <div class="text-center pt-4">
+                <button id="execute-button" class="bg-yellow-500 text-gray-900 font-bold py-3 px-8 rounded-full text-lg md:text-2xl shadow-xl hover:bg-yellow-300 transition-colors" disabled>
+                    EXECUTE TURN
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+            <div class="bg-gray-800 p-8 rounded-lg shadow-2xl text-center border-4 border-yellow-500">
+                <h2 id="winner-message" class="text-4xl mb-4 text-yellow-400 font-bold"></h2>
+                <p class="text-xl mb-6">Game Over!</p>
+                <button id="restart-button" class="bg-yellow-500 text-gray-900 font-bold py-3 px-6 rounded text-lg hover:bg-yellow-300">
+                    Play Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State Variables
+        let P1 = { hp: 100, meter: 0, move: null, pos: 1 }; // pos: 1-10 (10% step)
+        let P2 = { hp: 100, meter: 0, move: null, pos: 9 };
+
+        // Constants updated with THROW and FEINT
+        const MOVE_COST = { PUNCH: 0, KICK: 10, THROW: 10, BLOCK: 0, DASH: 0, FEINT: 0 };
+        const MOVE_DAMAGE = { PUNCH: 10, KICK: 25, THROW: 15 };
+        const MAX_METER = 50;
+        const MIN_DISTANCE_TO_HIT = 4; // Max distance for a hit to connect (pos2 - pos1 < 4)
+
+        const $ = selector => document.querySelector(selector);
+        const $$ = selector => document.querySelectorAll(selector);
+
+        // DOM Elements
+        const p1HpBar = $('#p1-hp');
+        const p2HpBar = $('#p2-hp');
+        const p1Meter = $('#p1-meter');
+        const p2Meter = $('#p2-meter');
+        const p1Char = $('#p1-char');
+        const p2Char = $('#p2-char');
+        const statusMessage = $('#status-message');
+        const executeButton = $('#execute-button');
+        const gameOverModal = $('#game-over-modal');
+        const winnerMessage = $('#winner-message');
+        const distanceIndicator = $('#distance-indicator');
+
+        // Utility to update the UI elements
+        function updateUI() {
+            p1HpBar.style.width = `${Math.max(0, P1.hp)}%`;
+            p2HpBar.style.width = `${Math.max(0, P2.hp)}%`;
+            p1Meter.textContent = `Meter: ${P1.meter}/${MAX_METER}`;
+            p2Meter.textContent = `Meter: ${P2.meter}/${MAX_METER}`;
+
+            // Update character positions based on game state (1 to 9)
+            p1Char.style.left = `${P1.pos * 10}%`;
+            p2Char.style.left = `${P2.pos * 10}%`;
+
+            const distance = Math.abs(P2.pos - P1.pos);
+            distanceIndicator.textContent = `Distance: ${distance}`;
+            distanceIndicator.classList.toggle('text-red-400', distance < MIN_DISTANCE_TO_HIT);
+            distanceIndicator.classList.toggle('text-yellow-400', distance >= MIN_DISTANCE_TO_HIT);
+
+            // Enable/Disable Execute button
+            if (P1.move && P2.move && !isGameOver()) {
+                executeButton.removeAttribute('disabled');
+                executeButton.classList.add('animate-pulse');
+            } else {
+                executeButton.setAttribute('disabled', 'true');
+                executeButton.classList.remove('animate-pulse');
+            }
+
+            // Check if game over
+            if (isGameOver()) {
+                endGame();
+            }
+        }
+
+        // Check if a move is a successful hit based on distance
+        function canHit() {
+            return Math.abs(P2.pos - P1.pos) < MIN_DISTANCE_TO_HIT;
+        }
+
+        /**
+         * Helper function to execute a conflict result.
+         * @param {Object} winnerState - The state object of the winning player (P1 or P2).
+         * @param {string} winnerName - 'P1' or 'P2'.
+         * @param {Object} loserState - The state object of the losing player.
+         * @param {number} damage - The damage dealt to the loser.
+         * @param {number} meterGain - Meter gained by the winner.
+         * @param {string} msg - Result message.
+         * @returns {string} The formatted result message.
+         */
+        function resolveConflict(winnerState, winnerName, loserState, damage, meterGain, msg) {
+            loserState.hp -= damage;
+            winnerState.meter = Math.min(MAX_METER, winnerState.meter + meterGain);
+            return `${winnerName}: ${msg}`;
+        }
+
+        // Core turn processing logic
+        function processTurn() {
+            let message = '';
+            let p1Move = P1.move;
+            let p2Move = P2.move;
+            
+            // 1. Meter Check & Cost Application (before execution)
+            // KICK and THROW cost meter. If insufficient, default to PUNCH.
+            if (p1Move === 'KICK' || p1Move === 'THROW') {
+                if (P1.meter < MOVE_COST[p1Move]) {
+                    p1Move = 'PUNCH'; 
+                    message += 'P1 lacked meter, defaulting to Punch. ';
+                } else {
+                    P1.meter -= MOVE_COST[p1Move];
+                }
+            }
+            if (p2Move === 'KICK' || p2Move === 'THROW') {
+                 if (P2.meter < MOVE_COST[p2Move]) {
+                    p2Move = 'PUNCH'; 
+                    message += 'P2 lacked meter, defaulting to Punch. ';
+                } else {
+                    P2.meter -= MOVE_COST[p2Move];
+                }
+            }
+
+            // 2. Positional (DASH) Moves
+            if (p1Move === 'DASH') { P1.pos = Math.min(P1.pos + 1, P2.pos - 1); }
+            if (p2Move === 'DASH') { P2.pos = Math.max(P2.pos - 1, P1.pos + 1); }
+            
+            // Ensure characters don't overlap
+            if (P1.pos >= P2.pos) {
+                const midpoint = Math.floor((P1.pos + P2.pos) / 2);
+                P1.pos = midpoint;
+                P2.pos = midpoint + 1;
+            }
+
+            // Check distance again after Dash moves
+            const hitConnects = canHit();
+
+            // Handle the simplest interaction: Too far to hit
+            if (!hitConnects && ['PUNCH', 'KICK', 'THROW'].includes(p1Move) && ['PUNCH', 'KICK', 'THROW'].includes(p2Move)) {
+                message = 'Both attacked, but distance was too great! STRIKE MISS!';
+            } else if (!hitConnects && ['PUNCH', 'KICK', 'THROW'].includes(p1Move)) {
+                message = 'P1 attacked but missed! Too far!';
+            } else if (!hitConnects && ['PUNCH', 'KICK', 'THROW'].includes(p2Move)) {
+                message = 'P2 attacked but missed! Too far!';
+            } 
+            // 3. Main Interaction Logic (only executes if a hit is possible or if non-attack moves are used)
+            else {
+                
+                // A. Dual Moves (Stalemate/Clash)
+                if (p1Move === p2Move) {
+                    switch (p1Move) {
+                        case 'PUNCH':
+                        case 'KICK':
+                        case 'THROW':
+                            message = 'CLASH! Both attacks connect!';
+                            P1.hp -= MOVE_DAMAGE[p1Move] / 2;
+                            P2.hp -= MOVE_DAMAGE[p2Move] / 2;
+                            P1.meter = Math.min(MAX_METER, P1.meter + 5);
+                            P2.meter = Math.min(MAX_METER, P2.meter + 5);
+                            break;
+                        case 'BLOCK':
+                            message = 'Standoff. Both players blocked.';
+                            P1.meter = Math.min(MAX_METER, P1.meter + 5);
+                            P2.meter = Math.min(MAX_METER, P2.meter + 5);
+                            break;
+                        case 'FEINT':
+                            message = 'Double Feint. Both reset position and gained meter.';
+                            P1.meter = Math.min(MAX_METER, P1.meter + 5);
+                            P2.meter = Math.min(MAX_METER, P2.meter + 5);
+                            break;
+                        case 'DASH': // Should be handled by positional logic, but here for completeness
+                            message = 'Both Dashing. Standoff.';
+                            P1.meter = Math.min(MAX_METER, P1.meter + 2);
+                            P2.meter = Math.min(MAX_METER, P2.meter + 2);
+                            break;
+                    }
+                } 
+                // B. P1 vs P2 (Conflict Resolution)
+                else {
+                    let winner = null;
+                    let loser = null;
+                    let p1Wins = false;
+
+                    // Helper to determine the conflict winner (returns true if P1 wins)
+                    const checkWin = (move1, move2) => {
+                        // PUNCH: Beats KICK, THROW, FEINT. Loses to BLOCK, DASH.
+                        if (move1 === 'PUNCH') return (move2 !== 'BLOCK' && move2 !== 'DASH'); 
+                        // KICK: Beats BLOCK, DASH. Loses to PUNCH, THROW, FEINT.
+                        if (move1 === 'KICK') return (move2 === 'BLOCK' || move2 === 'DASH'); 
+                        // THROW: Beats BLOCK, DASH. Loses to PUNCH, KICK, FEINT.
+                        if (move1 === 'THROW') return (move2 === 'BLOCK' || move2 === 'DASH'); 
+                        // BLOCK: Beats PUNCH, DASH. Loses to KICK, THROW.
+                        if (move1 === 'BLOCK') return (move2 === 'PUNCH' || move2 === 'DASH'); 
+                        // FEINT: Beats KICK, THROW, DASH. Loses to PUNCH, BLOCK.
+                        if (move1 === 'FEINT') return (move2 === 'KICK' || move2 === 'THROW' || move2 === 'DASH'); 
+                        // DASH: Loses to all except FEINT/BLOCK (stalemates).
+                        if (move1 === 'DASH') return false;
+                        return false;
+                    }
+
+                    // Check if P1's move beats P2's move
+                    if (checkWin(p1Move, p2Move)) {
+                        winner = P1; loser = P2; p1Wins = true;
+                    } 
+                    // Check if P2's move beats P1's move
+                    else if (checkWin(p2Move, p1Move)) {
+                        winner = P2; loser = P1;
+                    } 
+                    // Remaining cases are stales/special interactions
+                    
+                    if (winner) {
+                        const wMove = p1Wins ? p1Move : p2Move;
+                        const lMove = p1Wins ? p2Move : p1Move;
+                        const wName = p1Wins ? 'P1' : 'P2';
+                        const lName = p1Wins ? 'P2' : 'P1';
+                        
+                        // Resolve winning interactions
+                        if (wMove === 'PUNCH') {
+                            // Punch wins against KICK, THROW, FEINT
+                            message = resolveConflict(winner, wName, loser, MOVE_DAMAGE.PUNCH, 5, `Punch INTERRUPTS ${lName}'s ${lMove}!`);
+                        } else if (wMove === 'KICK') {
+                            // Kick wins against BLOCK, DASH
+                            if (lMove === 'BLOCK') {
+                                message = resolveConflict(winner, wName, loser, MOVE_DAMAGE.KICK / 4, 5, `Kick BREAKS ${lName}'s Block! (Chip Damage)`);
+                            } else { // vs DASH
+                                message = resolveConflict(winner, wName, loser, MOVE_DAMAGE.KICK, 15, `Kick connects with the Dashing ${lName}!`);
+                            }
+                        } else if (wMove === 'THROW') {
+                            // Throw wins against BLOCK, DASH
+                            if (lMove === 'BLOCK') {
+                                message = resolveConflict(winner, wName, loser, MOVE_DAMAGE.THROW, 10, `Throw GRABS ${lName} through their Block!`);
+                            } else { // vs DASH
+                                message = resolveConflict(winner, wName, loser, MOVE_DAMAGE.THROW, 10, `Throw CATCHES ${lName} while Dashing!`);
+                            }
+                        } else if (wMove === 'BLOCK') { 
+                            // Block wins against PUNCH, DASH
+                            if (lMove === 'PUNCH') {
+                                message = `${wName} successfully BLOCKED the Punch! ${wName} Meter +10.`;
+                                winner.meter = Math.min(MAX_METER, winner.meter + 10);
+                            } else { // vs DASH
+                                message = `Block vs Dash. Standoff. ${wName} Meter +2.`;
+                                winner.meter = Math.min(MAX_METER, winner.meter + 2);
+                            }
+                        } else if (wMove === 'FEINT') { 
+                            // Feint wins against KICK, THROW, DASH
+                            if (lMove === 'KICK') {
+                                message = `${wName} FEINTED and avoided ${lName}'s slow Kick! ${wName} gains 10 Meter.`;
+                                winner.meter = Math.min(MAX_METER, winner.meter + 10);
+                                // Push back the loser (Kick whiffs)
+                                if (lName === 'P1') P1.pos = Math.max(P1.pos - 1, 1);
+                                else P2.pos = Math.min(P2.pos + 1, 9);
+                            } else if (lMove === 'THROW') {
+                                message = `${wName} FEINTED and bailed out of ${lName}'s Throw commitment! ${wName} gains 10 Meter.`;
+                                winner.meter = Math.min(MAX_METER, winner.meter + 10);
+                            } else { // vs DASH
+                                message = `Feint vs Dash. Standoff. ${wName} Meter +2.`;
+                                winner.meter = Math.min(MAX_METER, winner.meter + 2);
+                            }
+                        }
+                    } else {
+                        // Handle pure stalemates not covered by Dual Moves (e.g., BLOCK vs FEINT)
+                        if ((p1Move === 'BLOCK' && p2Move === 'FEINT') || (p1Move === 'FEINT' && p2Move === 'BLOCK')) {
+                            message = 'Block vs Feint. Both moves cancel out, slight meter gain.';
+                        } else if (p1Move === 'DASH' || p2Move === 'DASH') {
+                            // Any remaining DASH interactions (should only be against BLOCK or FEINT, which are handled above)
+                            message = 'Positional exchange. Players moved and regrouped.';
+                        } else {
+                            // General stalemate catch-all
+                            message = 'Standoff. Neither move gained significant advantage.';
+                        }
+                        P1.meter = Math.min(MAX_METER, P1.meter + 5);
+                        P2.meter = Math.min(MAX_METER, P2.meter + 5);
+                    }
+                }
+            }
+            
+            // Finalize
+            P1.move = null;
+            P2.move = null;
+
+            statusMessage.textContent = message.trim() || "Turn resolved. Select the next move.";
+
+            // Reset move selection UI
+            $$('.move-button').forEach(btn => {
+                btn.classList.remove('selected', 'p1-selected', 'p2-selected');
+                btn.removeAttribute('disabled');
+            });
+            $('#p1-hint').classList.remove('visible');
+            $('#p2-hint').classList.remove('visible');
+
+            updateUI();
+        }
+
+        // Handle move selection
+        function handleMoveSelection(e) {
+            const btn = e.target.closest('.move-button');
+            if (!btn) return;
+
+            const player = btn.dataset.player;
+            const move = btn.dataset.move;
+            const playerState = player === 'p1' ? P1 : P2;
+            const hint = $(`#${player}-hint`);
+            const colorClass = player === 'p1' ? 'p1-selected' : 'p2-selected';
+
+            // Clear previous selection for this player
+            $$(`.move-button[data-player="${player}"]`).forEach(b => {
+                b.classList.remove('selected', colorClass);
+            });
+
+            // Set new selection
+            playerState.move = move;
+            btn.classList.add('selected', colorClass);
+            hint.classList.add('visible');
+            
+            updateUI();
+        }
+
+        function isGameOver() {
+            return P1.hp <= 0 || P2.hp <= 0;
+        }
+
+        function endGame() {
+            let winner = '';
+            if (P1.hp <= 0 && P2.hp <= 0) {
+                winner = "DOUBLE K.O.! It's a tie!";
+            } else if (P1.hp <= 0) {
+                winner = "PLAYER 2 WINS!";
+            } else if (P2.hp <= 0) {
+                winner = "PLAYER 1 WINS!";
+            }
+            
+            winnerMessage.textContent = winner;
+            gameOverModal.classList.remove('hidden');
+        }
+
+        function resetGame() {
+            P1 = { hp: 100, meter: 0, move: null, pos: 1 };
+            P2 = { hp: 100, meter: 0, move: null, pos: 9 };
+
+            gameOverModal.classList.add('hidden');
+            statusMessage.textContent = 'SELECT YOUR MOVES & CLICK EXECUTE!';
+
+            // Reset buttons and UI
+            $$('.move-button').forEach(btn => {
+                btn.classList.remove('selected', 'p1-selected', 'p2-selected');
+                btn.removeAttribute('disabled');
+            });
+            $('#p1-hint').classList.remove('visible');
+            $('#p2-hint').classList.remove('visible');
+            
+            updateUI();
+        }
+
+        // Event Listeners
+        window.onload = function() {
+            // Attach move selection listener (delegated)
+            $('#move-selection').addEventListener('click', handleMoveSelection);
+
+            // Attach execute button listener
+            executeButton.addEventListener('click', processTurn);
+
+            // Attach restart button listener
+            $('#restart-button').addEventListener('click', resetGame);
+            
+            // Initial UI update
+            resetGame();
+        };
+
+    </script>
+</body>
+</html>
