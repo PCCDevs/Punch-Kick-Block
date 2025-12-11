@@ -35,7 +35,7 @@
             border: 3px solid;
             transition: all 0.1s;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
-            height: 4rem; /* Fixed height for better alignment */
+            /* Removed fixed height: 4rem; to use Tailwind h-14 */
         }
         .move-button:hover:not(.selected) {
             transform: translateY(-2px);
@@ -90,8 +90,9 @@
             position: absolute;
             bottom: 10px;
         }
+        /* Airborne position lift */
         .character-icon.airborne {
-            top: 20px !important; 
+            top: 10px !important; 
         }
         /* Icon flash for confirmation */
         .character-icon.flash {
@@ -99,6 +100,18 @@
         }
         
     </style>
+    <!-- Configure Tailwind for Inter font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
 </head>
 <body class="p-4 flex items-center justify-center min-h-screen">
 
@@ -122,59 +135,72 @@
 
         <!-- Arena and Position Tracker -->
         <div id="arena" class="relative h-28 bg-gray-900 border-4 border-gray-700 rounded-lg mb-6 flex items-center justify-center">
+            <!-- Icons: 👊 (Punch) for P1, 🦵 (Kick) for P2 -->
             <div id="p1-char" class="character-icon text-neon-red" style="left: 10%;">👊</div>
             <div id="p2-char" class="character-icon text-neon-green" style="left: 80%; transform: scaleX(-1);">🦵</div>
             <div id="distance-indicator" class="text-xl text-yellow-400 absolute top-0 mt-2">Distance: 7</div>
         </div>
 
-        <!-- Result/Status Message -->
-        <div id="status-message" class="h-12 flex items-center justify-center text-center text-lg md:text-2xl mb-6 text-yellow-300 bg-gray-800 rounded p-2">
+        <!-- Result/Status Message - Increased height (h-20) and padding (p-3) for better fit -->
+        <div id="status-message" class="h-20 flex items-center justify-center text-center text-lg md:text-xl mb-6 text-yellow-300 bg-gray-800 rounded p-3 overflow-hidden">
             SELECT YOUR MOVES & THE TURN WILL EXECUTE!
         </div>
         
         <!-- Move Selection Area -->
         <div id="move-selection" class="space-y-6">
 
-            <!-- P1 Controls (Left Side) -->
+            <!-- P1 Controls (Red) -->
             <div id="p1-controls" class="p-4 bg-gray-800 rounded-lg border-2 border-neon-red player-controls">
                 <h3 class="text-lg mb-3 text-neon-red text-center w-full">Player 1 (Red)</h3>
                 <div class="player-controls-inner">
-                    <!-- Row 1: Attack/Ranged Moves -->
-                    <div class="grid grid-cols-4 gap-2 mb-2">
-                        <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="PUNCH">Punch (P:1/0M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="KICK">Kick (P:3/10M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-700 hover:bg-red-500" data-player="p1" data-move="THROW">Throw (P:3/10M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="SHOOT">Shoot (P:2/5M)</button>
+                    <!-- Row 1: Attack Moves (6 columns) - Added h-14 to buttons -->
+                    <div class="grid grid-cols-6 gap-2 mb-2">
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="PUNCH">Punch (P:1/0)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="UPPERCUT">Upper (P:2/5)</button> 
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="KICK">Kick (P:3/10)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-700 hover:bg-red-500" data-player="p1" data-move="THROW">Throw (P:3/10)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="SHOOT">Shoot (P:2/5)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-700 hover:bg-red-500" data-player="p1" data-move="AERIAL_KICK">Air Kick (P:3/15)</button>
                     </div>
-                    <!-- Row 2: Defensive/Positional Moves (FEINT replaced by PARRY) -->
-                    <div class="grid grid-cols-4 gap-2">
-                        <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="BLOCK">Block (0M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="PARRY">Parry (P:0/5M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="DASH">Dash Fwd (0M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="JUMP">Jump (0M)</button>
+                    <!-- Row 2: Defensive/Positional Moves (5 columns) - Added h-14 to buttons -->
+                    <div class="grid grid-cols-5 gap-2">
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="BLOCK">Block (0M)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="PARRY">Parry (P:0/5)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-700 hover:bg-red-500" data-player="p1" data-move="FEINT">Feint (vs P0/1)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="JUMP">Jump (0M)</button> 
+                        <div class="grid grid-cols-2 gap-2 col-span-1">
+                            <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="DASH_FWD">Fwd</button>
+                            <button class="move-button h-14 p-2 text-xs border-neon-red bg-red-900 hover:bg-red-700" data-player="p1" data-move="DASH_BACK">Back</button>
+                        </div>
                     </div>
                     <div id="p1-hint" class="player-move-hint text-xs mt-2 text-right text-red-300">Move Selected!</div>
                 </div>
                 <div id="p1-status" class="committed-message hidden"></div>
             </div>
 
-            <!-- P2 Controls (Right Side) -->
+            <!-- P2 Controls (Green) -->
             <div id="p2-controls" class="p-4 bg-gray-800 rounded-lg border-2 border-neon-green player-controls">
                 <h3 class="text-lg mb-3 text-neon-green text-center w-full">Player 2 (Green)</h3>
                 <div class="player-controls-inner">
-                    <!-- Row 1: Attack/Ranged Moves -->
-                    <div class="grid grid-cols-4 gap-2 mb-2">
-                        <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="PUNCH">Punch (P:1/0M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="KICK">Kick (P:3/10M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-700 hover:bg-emerald-500" data-player="p2" data-move="THROW">Throw (P:3/10M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="SHOOT">Shoot (P:2/5M)</button>
+                    <!-- Row 1: Attack Moves (6 columns) - Added h-14 to buttons -->
+                    <div class="grid grid-cols-6 gap-2 mb-2">
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="PUNCH">Punch (P:1/0)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="UPPERCUT">Upper (P:2/5)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="KICK">Kick (P:3/10)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-700 hover:bg-emerald-500" data-player="p2" data-move="THROW">Throw (P:3/10)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="SHOOT">Shoot (P:2/5)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-700 hover:bg-emerald-500" data-player="p2" data-move="AERIAL_KICK">Air Kick (P:3/15)</button>
                     </div>
-                    <!-- Row 2: Defensive/Positional Moves (FEINT replaced by PARRY) -->
-                    <div class="grid grid-cols-4 gap-2">
-                        <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="BLOCK">Block (0M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="PARRY">Parry (P:0/5M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="DASH">Dash Fwd (0M)</button>
-                        <button class="move-button p-2 text-xs md:text-base border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="JUMP">Jump (0M)</button>
+                    <!-- Row 2: Defensive/Positional Moves (5 columns) - Added h-14 to buttons -->
+                    <div class="grid grid-cols-5 gap-2">
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="BLOCK">Block (0M)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="PARRY">Parry (P:0/5)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-700 hover:bg-emerald-500" data-player="p2" data-move="FEINT">Feint (vs P0/1)</button>
+                        <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="JUMP">Jump (0M)</button>
+                        <div class="grid grid-cols-2 gap-2 col-span-1">
+                            <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="DASH_FWD">Fwd</button>
+                            <button class="move-button h-14 p-2 text-xs border-neon-green bg-emerald-900 hover:bg-emerald-700" data-player="p2" data-move="DASH_BACK">Back</button>
+                        </div>
                     </div>
                     <div id="p2-hint" class="player-move-hint text-xs mt-2 text-right text-emerald-300">Move Selected!</div>
                 </div>
@@ -202,28 +228,34 @@
     </div>
 
     <script>
-        // Game State Variables - Added isSkippingTurn property
+        // Game State Variables
         let P1 = { hp: 100, meter: 0, move: null, pos: 1, isAirborne: false, isCommitted: false, isSkippingTurn: 0 };
         let P2 = { hp: 100, meter: 0, move: null, pos: 9, isAirborne: false, isCommitted: false, isSkippingTurn: 0 };
         const MAX_METER = 50;
         // Allows attacks to hit when distance is 4 (e.g., pos 1 and pos 5) - range 2 on the grid
         const MIN_DISTANCE_TO_HIT = 5; 
+        const DASH_DISTANCE = 2; // Dash distance set to 2
+        const KNOCKBACK_DISTANCE = 2; // New constant for THROW knockback distance
 
-        // MOVESET definition: FEINT is still defined for logic, but button is replaced by PARRY
-        // P0 (DASH, BLOCK, PARRY, JUMP) are fastest; P3 (KICK, THROW) are slowest
+        // MOVESET definition: 
         const MOVESET = {
             PUNCH: { cost: 0, damage: 10, priority: 1, onHitAdvantage: 5, onWhiffPenalty: -5 }, 
+            UPPERCUT: { cost: 5, damage: 10, antiAirDamage: 20, priority: 2, onHitAdvantage: 10, onWhiffPenalty: -10 }, 
             SHOOT: { cost: 5, damage: 10, priority: 2, onHitAdvantage: 5, onWhiffPenalty: 0 }, 
             KICK: { cost: 10, damage: 25, priority: 3, onHitAdvantage: 10, onWhiffPenalty: -15 }, 
             THROW: { cost: 10, damage: 15, priority: 3, onHitAdvantage: 10, onWhiffPenalty: -15 },
+            AERIAL_KICK: { cost: 15, damage: 30, maxDamage: 90, priority: 3, onHitAdvantage: 15, onWhiffPenalty: -15 }, 
+            FEINT: { cost: 5, damage: 0, priority: 0, onHitAdvantage: 10, onWhiffPenalty: -5 }, 
+            
             BLOCK: { cost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0 },
-            FEINT: { cost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0 }, // Retained in MOVESET
-            DASH: { cost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0 },
-            JUMP: { cost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0 },
-            PARRY: { cost: 5, damage: 0, priority: 0, onHitAdvantage: 15, onWhiffPenalty: -5, isParry: true }, // NEW PARRY MOVE
+            SKIPPED: { cost: 0, damage: 0, priority: 0, onHitAdvantage: 0, onWhiffPenalty: 0 }, // For Skip Turn state
+            DASH_FWD: { cost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0 }, 
+            DASH_BACK: { cost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0 }, 
+            JUMP: { cost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0 }, 
+            PARRY: { cost: 5, damage: 0, priority: 0, onHitAdvantage: 15, onWhiffPenalty: -5, isParry: true }, 
         };
         
-        const ATTACK_MOVES = ['PUNCH', 'KICK', 'THROW', 'SHOOT'];
+        const ATTACK_MOVES = ['PUNCH', 'UPPERCUT', 'KICK', 'THROW', 'SHOOT', 'AERIAL_KICK'];
 
         const $ = selector => document.querySelector(selector);
         const $$ = selector => document.querySelectorAll(selector);
@@ -259,7 +291,9 @@
             // Update character positions and airborne status
             p1Char.style.left = `${P1.pos * 10}%`;
             p2Char.style.left = `${P2.pos * 10}%`;
-            p1Char.classList.toggle('airborne', P1.isAirborne);
+            
+            // Apply airborne class if jump was executed last turn
+            p1Char.classList.toggle('airborne', P1.isAirborne); 
             p2Char.classList.toggle('airborne', P2.isAirborne);
 
             const distance = Math.abs(P2.pos - P1.pos);
@@ -310,7 +344,7 @@
                 return;
             }
 
-            // --- Auto-Execute Logic (FIXED: Checks for skipping or commitment) ---
+            // --- Auto-Execute Logic ---
             if (p1Ready && p2Ready) {
                 executeButton.setAttribute('disabled', 'true');
                 executeButton.classList.add('bg-yellow-500', 'animate-pulse', 'text-gray-900');
@@ -363,20 +397,39 @@
             if (penalty < 0) {
                  return `${name}'s ${move} fails! ${reason}. Meter penalized by ${Math.abs(penalty)}.`;
             }
-            return `${name}'s ${move} resolves. ${reason}. ${penalty > 0 ? `Meter +${penalty}.` : ''}`;
+            return `${name}'s ${move} executes. ${reason}. ${penalty > 0 ? `Meter +${penalty}.` : ''}`;
         }
+        
+        /**
+         * Applies knockback to the defender after a successful THROW.
+         */
+        function applyKnockback(attacker, defender) {
+            const isP1Attacker = attacker === P1;
+            
+            if (isP1Attacker) {
+                // P1 attacks P2: P2 moves right (increase position)
+                defender.pos = Math.min(defender.pos + KNOCKBACK_DISTANCE, 9);
+                // Ensure P1 doesn't move past P2
+                attacker.pos = Math.min(attacker.pos, defender.pos - 1);
+            } else {
+                // P2 attacks P1: P1 moves left (decrease position)
+                defender.pos = Math.max(defender.pos - KNOCKBACK_DISTANCE, 1);
+                // Ensure P2 doesn't move past P1
+                attacker.pos = Math.max(attacker.pos, defender.pos + 1);
+            }
+        }
+
 
         /**
          * Main move resolution function based on the faster move.
+         * NOTE: Anti-Air JUMP counters (UPPERCUT/AERIAL_KICK vs JUMP) are handled in processTurn before this function is called.
          */
         function resolveSequentialInteraction(attacker, attackerName, defender, defenderName) {
             const attMove = attacker.move;
             const defMove = defender.move;
             const attData = MOVESET[attMove];
             
-            const groundAttacks = ['PUNCH', 'KICK', 'THROW'];
-            const closeAttack = groundAttacks.includes(attMove);
-            const antiAir = 'KICK';
+            const groundAttacks = ['PUNCH', 'UPPERCUT', 'KICK', 'THROW'];
             const rangedAttack = 'SHOOT';
             const defMoveIsAttack = ATTACK_MOVES.includes(defMove);
             
@@ -385,8 +438,29 @@
 
             // --- A. Resolve Attacker's Action ---
             
-            // 0. Attacker (PARRY) vs Defender (non-Attack or too far) - Parry Fail
-            if (attMove === 'PARRY') {
+            // 0.1 Attacker (FEINT) vs Defender (P:0 or P:1 Move) - Feint Success
+            if (attMove === 'FEINT' && MOVESET[defMove].priority <= 1 && !moveResolved) {
+                // 1. Feinter gains meter (onHitAdvantage: 10)
+                attacker.meter = Math.min(MAX_METER, attacker.meter + attData.onHitAdvantage);
+                
+                // 2. Opponent loses 5 meter, their move is nullified (0 damage)
+                defender.meter = Math.max(0, defender.meter - 5); 
+                
+                // 3. Craft message
+                resultMessage = `${attackerName} FEINTS, causing ${defenderName}'s ${defMove} (P:${MOVESET[defMove].priority}) to fail (Nullified)! ${defenderName} loses 5 Meter.`;
+                moveResolved = true;
+            }
+
+            // 0.2 Attacker (AERIAL_KICK) vs Defender (UPPERCUT/THROW) - AERIAL KICK Countered
+            else if (attMove === 'AERIAL_KICK' && (defMove === 'THROW' || defMove === 'UPPERCUT') && isCloseEnough() && !moveResolved) {
+                // Apply penalty to the AERIAL_KICK user for being countered and STUN them
+                attacker.isSkippingTurn = 1; // STUN!
+                resultMessage = applyPenalty(attacker, attackerName, attMove, attData.onWhiffPenalty, `COUNTERED by ${defenderName}'s ${defMove}! ${attackerName} is STUNNED next turn.`);
+                moveResolved = true;
+            }
+
+            // 0.4 Attacker (PARRY) vs Defender (non-Attack or too far) - Parry Fail
+            else if (attMove === 'PARRY' && !moveResolved) {
                 // If defender's move is not an attack, or they are too far for any close attack
                 if (!defMoveIsAttack || !isCloseEnough()) {
                     attacker.isSkippingTurn = 1; // Attacker is stunned next turn
@@ -395,9 +469,9 @@
                     return `${attackerName}'s PARRY misses! ${defenderName} used a non-attacking move or was too far. ${attackerName} loses next turn.`;
                 }
             }
-
+            
             // 1. Attacker (Attack) vs Defender (PARRY) - Parry Success
-            if (defMove === 'PARRY' && ATTACK_MOVES.includes(attMove) && isCloseEnough()) {
+            if (defMove === 'PARRY' && ATTACK_MOVES.includes(attMove) && isCloseEnough() && !moveResolved) {
                 attacker.isSkippingTurn = 1; // Attacker is stunned next turn
                 defender.meter = Math.min(MAX_METER, defender.meter + MOVESET.PARRY.onHitAdvantage);
                 moveResolved = true;
@@ -405,75 +479,88 @@
             }
 
             // 2. Attacker (Attack) vs Defender (BLOCK)
-            if (defMove === 'BLOCK' && attMove !== 'THROW' && attMove !== 'JUMP' && isCloseEnough()) {
-                let chipDamage = 0;
-                
-                if (attMove === 'KICK') {
-                    chipDamage = attData.damage / 4; 
-                } else if (attMove === 'SHOOT') {
-                    chipDamage = attData.damage / 2; 
-                } else if (attMove === 'PUNCH') {
-                    chipDamage = 2; 
-                }
-
-                if (chipDamage > 0) {
-                    defender.hp = Math.max(0, defender.hp - chipDamage);
-                    const roundedDamage = Math.round(chipDamage * 10) / 10;
-                    resultMessage = `${attackerName}'s ${attMove} is BLOCKED! ${defenderName} takes ${roundedDamage} chip damage.`;
+            else if (defMove === 'BLOCK' && attMove !== 'THROW' && attMove !== 'JUMP' && !moveResolved) {
+                // Only resolve BLOCK if close enough for ground attacks, or if SHOOT
+                if (groundAttacks.includes(attMove) && !isCloseEnough()) {
+                    // Treat as whiff/whiff penalty if it was a ground attack that was too far to be blocked
+                    // This is covered by case 6 (Whiff due to distance) below, so skip here.
                 } else {
-                    resultMessage = `${attackerName}'s ${attMove} is perfectly BLOCKED!`;
+                    let chipDamage = 0;
+                    
+                    // Block takes reduced damage
+                    if (attMove === 'KICK' || attMove === 'AERIAL_KICK') { // AERIAL_KICK also has chip if blocked
+                        chipDamage = attData.damage / 4; 
+                    } else if (attMove === 'SHOOT') {
+                        chipDamage = attData.damage / 2; 
+                    } else if (attMove === 'PUNCH' || attMove === 'UPPERCUT') { 
+                        chipDamage = 2; 
+                    }
+
+                    if (chipDamage > 0) {
+                        defender.hp = Math.max(0, defender.hp - chipDamage);
+                        const roundedDamage = Math.round(chipDamage * 10) / 10;
+                        resultMessage = `${attackerName}'s ${attMove} is BLOCKED! ${defenderName} takes ${roundedDamage} chip damage.`;
+                    } else {
+                        resultMessage = `${attackerName}'s ${attMove} is perfectly BLOCKED!`;
+                    }
+                    
+                    attacker.meter = Math.max(0, attacker.meter + attData.onWhiffPenalty); 
+                    defender.meter = Math.min(MAX_METER, defender.meter + MOVESET.BLOCK.onHitAdvantage); 
+                    moveResolved = true;
                 }
-                
-                attacker.meter = Math.max(0, attacker.meter + attData.onWhiffPenalty); 
-                defender.meter = Math.min(MAX_METER, defender.meter + MOVESET.BLOCK.onHitAdvantage); 
-                moveResolved = true;
             } 
             
             // 3. Attacker (THROW) vs BLOCK 
-            else if (attMove === 'THROW' && defMove === 'BLOCK' && isCloseEnough()) {
+            else if (attMove === 'THROW' && defMove === 'BLOCK' && isCloseEnough() && !moveResolved) {
                 resultMessage = resolveHit(attacker, attackerName, defender, attData.damage, attData.onHitAdvantage, `Throw GRABS ${defenderName} through their Block!`);
+                applyKnockback(attacker, defender); // Apply knockback
+                resultMessage += ` (Knockback ${KNOCKBACK_DISTANCE} applied)`;
                 moveResolved = true;
             }
             // 3b. THROW whiffed due to distance
-            else if (attMove === 'THROW' && !isCloseEnough()) {
+            else if (attMove === 'THROW' && !isCloseEnough() && !moveResolved) {
                  resultMessage = applyPenalty(attacker, attackerName, attMove, attData.onWhiffPenalty, `Too far! Throw whiffs due to distance`);
                  moveResolved = true;
             }
-
-            // 4. Attacker (Ground Attack) vs JUMP 
-            else if (closeAttack && defender.isAirborne && isCloseEnough()) {
-                 resultMessage = applyPenalty(attacker, attackerName, attMove, attData.onWhiffPenalty, `${defenderName} JUMPS over it! (Whiff)`);
-                 moveResolved = true;
-            }
             
-            // 5. Attacker (KICK) vs JUMP (Anti-air)
-            else if (attMove === antiAir && defender.isAirborne) {
-                resultMessage = resolveHit(attacker, attackerName, defender, attData.damage, attData.onHitAdvantage, `Kick connects with the Jumping ${defenderName}! ANTI-AIR HIT!`);
-                moveResolved = true;
-            }
+            // 4. Ground Attack vs JUMP (already handled in processTurn now - this is only for non-counterable ground attacks whiffing a fast JUMP)
+            // But, if the anti-air counter in processTurn failed (e.g., due to distance), we treat the ground attack as a whiff here.
             
-            // 6. Attacker (SHOOT) vs JUMP 
-            else if (attMove === rangedAttack && defender.isAirborne) {
+            // 5. Attacker (SHOOT) vs JUMP 
+            else if (attMove === rangedAttack && defMove === 'JUMP' && !moveResolved) {
                  resultMessage = applyPenalty(attacker, attackerName, attMove, attData.onWhiffPenalty, `${defenderName} JUMPS over the shot! (Evasion)`);
                  moveResolved = true;
             }
-
-            // 7. Attacker Whiffs (Too far) - Only applies to ground attacks (PUNCH, KICK)
-            else if (['PUNCH', 'KICK'].includes(attMove) && !isCloseEnough()) {
-                resultMessage = applyPenalty(attacker, attackerName, attMove, attData.onWhiffPenalty, `Too far! Attack whiffs due to distance`);
+            
+            // 6. Attacker Whiffs (Too far) - Only applies to ground attacks (PUNCH, UPPERCUT, KICK, THROW, AERIAL_KICK)
+            else if (['PUNCH', 'UPPERCUT', 'KICK', 'THROW', 'AERIAL_KICK'].includes(attMove) && !isCloseEnough() && !moveResolved) {
+                // AERIAL KICK WHIFF -> STUN
+                 if (attMove === 'AERIAL_KICK') {
+                     attacker.isSkippingTurn = 1; // STUN!
+                     resultMessage = applyPenalty(attacker, attackerName, attMove, attData.onWhiffPenalty, `Too far! ${attackerName} is STUNNED next turn.`);
+                 } else {
+                     resultMessage = applyPenalty(attacker, attackerName, attMove, attData.onWhiffPenalty, `Too far! Attack whiffs due to distance`);
+                 }
                 moveResolved = true;
             }
 
-            // 8. Attacker Lands A Clean Hit (Attacker's move is faster and hits the commitment of the slower move)
+            // 7. Attacker Lands A Clean Hit (Attacker's move is faster and hits the commitment of the slower move)
             else if (ATTACK_MOVES.includes(attMove) && !moveResolved) { 
-                resultMessage = resolveHit(attacker, attackerName, defender, attData.damage, attData.onHitAdvantage, `${attMove} INTERRUPTS ${defenderName}'s ${defMove}!`);
+                // Normal hit damage for other attacks
+                const damage = attData.damage;
+                resultMessage = resolveHit(attacker, attackerName, defender, damage, attData.onHitAdvantage, `${attMove} INTERRUPTS ${defenderName}'s ${defMove}!`);
+                
+                if (attMove === 'THROW') {
+                    applyKnockback(attacker, defender);
+                    resultMessage += ` (Knockback ${KNOCKBACK_DISTANCE} applied)`;
+                }
+
                 moveResolved = true;
             }
             
-            // 9. Attacker Executes Non-Offensive Move (DASH, JUMP, BLOCK, PARRY)
-            // This is the fallback if the move is non-offensive and didn't result in any specific interaction above.
+            // 8. Attacker Executes Non-Offensive Move (DASH_FWD/BACK, BLOCK, JUMP, PARRY, FEINT)
             if (!moveResolved) {
-                 // For BLOCK/DASH/JUMP, just execute the action/gain meter.
+                 // For BLOCK/DASH/JUMP/FEINT, just execute the action/gain meter.
                  resultMessage = applyPenalty(attacker, attackerName, attMove, attData.onHitAdvantage, `${attMove} executes.`);
                  moveResolved = true;
             }
@@ -502,7 +589,6 @@
                 P2.move = 'SKIPPED';
             }
 
-            // If both skipped, just show a message and reset
             if (P1.move === 'SKIPPED' && P2.move === 'SKIPPED') {
                  statusMessage.innerHTML = 'Both players skipped turn due to previous stun/penalty.';
                  setTimeout(resetTurnState, 1800);
@@ -512,9 +598,9 @@
             let p1Move = P1.move;
             let p2Move = P2.move;
 
-            // FIX: Safely determine move data. If move is 'SKIPPED', use MOVESET.BLOCK data.
-            let p1Data = p1Move === 'SKIPPED' ? MOVESET.BLOCK : MOVESET[p1Move];
-            let p2Data = p2Move === 'SKIPPED' ? MOVESET.BLOCK : MOVESET[p2Move];
+            // FIX: Safely determine move data.
+            let p1Data = MOVESET[p1Move];
+            let p2Data = MOVESET[p2Move];
             
             if (p1Move === 'SKIPPED') { 
                 message += `<span class="text-neon-red">P1 is stunned and SKIPS turn.</span>. `;
@@ -528,9 +614,8 @@
             if (p1Move !== 'SKIPPED') {
                 if (P1.meter < p1Data.cost) {
                     P1.move = 'PUNCH';
-                    // Re-fetch data after default to PUNCH
                     p1Data = MOVESET.PUNCH; 
-                    message += `<span class="text-red-400">P1 failed to pay ${p1Data.cost}M for ${p1SelectedMove}, defaulted to PUNCH (P:1)</span>. `;
+                    message += `<span class="text-red-400">P1 failed to pay ${p1SelectedMove} cost, defaulted to PUNCH (P:1)</span>. `;
                 } else {
                     P1.meter -= p1Data.cost;
                 }
@@ -539,82 +624,115 @@
             if (p2Move !== 'SKIPPED') {
                 if (P2.meter < p2Data.cost) {
                     P2.move = 'PUNCH';
-                    // Re-fetch data after default to PUNCH
                     p2Data = MOVESET.PUNCH;
-                    message += `<span class="text-emerald-400">P2 failed to pay ${p2Data.cost}M for ${p2SelectedMove}, defaulted to PUNCH (P:1)</span>. `;
+                    message += `<span class="text-emerald-400">P2 failed to pay ${p2SelectedMove} cost, defaulted to PUNCH (P:1)</span>. `;
                 } else {
                     P2.meter -= p2Data.cost;
                 }
             }
             
-            // Re-fetch data after potential PUNCH default
-            const p1FinalData = p1Move === 'SKIPPED' ? MOVESET.BLOCK : MOVESET[P1.move];
-            const p2FinalData = p2Move === 'SKIPPED' ? MOVESET.BLOCK : MOVESET[P2.move];
+            // Final move data after potential PUNCH default
+            const p1FinalData = MOVESET[P1.move];
+            const p2FinalData = MOVESET[P2.move];
             
             // Ensure priority variables reflect the final state
             let p1Priority = p1FinalData.priority;
             let p2Priority = p2FinalData.priority;
 
 
-            // --- 2. Positional and Airborne State Setup (P0 moves like DASH execute here) ---
+            // --- 2. Positional and Airborne State Setup (P0 moves like DASH and JUMP execute here) ---
             
-            // Apply movement (DASH is P0, so it always happens first if chosen)
-            if (P1.move === 'DASH') { P1.pos = Math.min(P1.pos + 1, P2.pos - 1); }
-            if (P2.move === 'DASH') { P2.pos = Math.max(P2.pos - 1, P1.pos + 1); }
-            
+            // Reset airborne status BEFORE applying new JUMP move
+            P1.isAirborne = false; 
+            P2.isAirborne = false;
+
+            // Apply JUMP status for the duration of the turn interaction
+            if (P1.move === 'JUMP') { 
+                P1.isAirborne = true;
+            }
+            if (P2.move === 'JUMP') { 
+                P2.isAirborne = true;
+            }
+
+            // Apply movement (DASH moves are P0 and use DASH_DISTANCE = 2)
+            if (P1.move === 'DASH_FWD') { 
+                // P1 moves right (towards P2)
+                P1.pos = Math.min(P1.pos + DASH_DISTANCE, P2.pos - 1); 
+            }
+            if (P1.move === 'DASH_BACK') { 
+                // P1 moves left (away from P2). Min position is 1 (10% left).
+                P1.pos = Math.max(P1.pos - DASH_DISTANCE, 1); 
+            }
+
+            if (P2.move === 'DASH_FWD') { 
+                // P2 moves left (towards P1)
+                P2.pos = Math.max(P2.pos - DASH_DISTANCE, P1.pos + 1); 
+            }
+            if (P2.move === 'DASH_BACK') { 
+                // P2 moves right (away from P1). Max position is 9 (90% left).
+                P2.pos = Math.min(P2.pos + DASH_DISTANCE, 9); 
+            }
+
             // Ensure fighters don't cross over
             if (P1.pos >= P2.pos) {
                 const midpoint = Math.floor((P1.pos + P2.pos) / 2);
                 P1.pos = midpoint;
                 P2.pos = midpoint + 1;
             }
-
-            P1.isAirborne = (P1.move === 'JUMP');
-            P2.isAirborne = (P2.move === 'JUMP');
             
             // --- 3. Sequential Conflict Resolution (Priority Based) ---
             
-            if (p1Move === 'SKIPPED' || p2Move === 'SKIPPED') {
+            if (P1.move === 'SKIPPED' || P2.move === 'SKIPPED') {
                 // Handle interaction where one player skipped
-                if (p1Move === 'SKIPPED' && p2Move !== 'SKIPPED') {
-                    // P2 acts against P1's skip (which acts like a permanent block)
+                if (P1.move === 'SKIPPED' && P2.move !== 'SKIPPED') {
+                    // P2 acts against P1's skip (which acts like a permanent block/defense)
                     message += resolveSequentialInteraction(P2, 'P2', P1, 'P1');
-                } else if (p2Move === 'SKIPPED' && p1Move !== 'SKIPPED') {
+                } else if (P2.move === 'SKIPPED' && P1.move !== 'SKIPPED') {
                     // P1 acts against P2's skip
                     message += resolveSequentialInteraction(P1, 'P1', P2, 'P2');
                 }
             }
             else if (p1Priority !== p2Priority) {
-                // Determine the faster player (Active) and the slower player (Passive)
+                
                 let activePlayer = (p1Priority < p2Priority) ? P1 : P2;
                 let passivePlayer = (p1Priority < p2Priority) ? P2 : P1;
                 let activeName = (p1Priority < p2Priority) ? 'P1' : 'P2';
                 let passiveName = (p1Priority < p2Priority) ? 'P2' : 'P1';
                 let passiveData = (p1Priority < p2Priority) ? p2FinalData : p1FinalData;
-                
-                // --- Role Swap Check (Prioritizes Attack vs Defense) ---
-                const activeIsDefensive = ['BLOCK', 'PARRY', 'JUMP', 'DASH'].includes(activePlayer.move);
-                const passiveIsOffensive = ATTACK_MOVES.includes(passivePlayer.move);
 
                 let att, def, attName, defName;
+                let overrideResult = '';
+
+                // --- ANTI-AIR COUNTER OVERRIDE ---
+                // If the faster move (activePlayer) is JUMP (P:0) and the slower move (passivePlayer) is an Anti-Air
+                if (activePlayer.move === 'JUMP' && passivePlayer.isAirborne === false) {
+                    if (passivePlayer.move === 'UPPERCUT' && isCloseEnough()) {
+                        const damage = MOVESET.UPPERCUT.antiAirDamage;
+                        // Passive (UPPERCUT) hits Active (JUMP)
+                        overrideResult = resolveHit(passivePlayer, passiveName, activePlayer, damage, MOVESET.UPPERCUT.onHitAdvantage, `UPPERCUT COUNTERS ${activeName}'s JUMP for Anti-Air damage (${damage})!`);
+                    } else if (passivePlayer.move === 'AERIAL_KICK') {
+                        // AERIAL_KICK is also an air-to-air, but let's assume if they jump it's an air-to-air hit for max damage
+                        const damage = MOVESET.AERIAL_KICK.maxDamage;
+                        overrideResult = resolveHit(passivePlayer, passiveName, activePlayer, damage, MOVESET.AERIAL_KICK.onHitAdvantage, `AERIAL KICK COUNTERS ${activeName}'s JUMP for HUGE damage (${damage})!`);
+                    }
+                }
                 
-                if (activeIsDefensive && passiveIsOffensive && passivePlayer.move !== 'SHOOT') {
-                    // Case: Faster player defends/moves, Slower player attacks. (Slower attack attempts to hit the faster defense).
-                    att = passivePlayer; def = activePlayer;
-                    attName = passiveName; defName = activeName;
+                if (overrideResult) {
+                    message += overrideResult;
                 } else {
-                    // Standard: Faster player attacks/moves first against the slower player's commitment.
+                    // --- Standard Sequential Resolution ---
+                    
+                    // Determine roles for sequential execution (Faster move always resolves first)
                     att = activePlayer; def = passivePlayer;
                     attName = activeName; defName = passiveName;
-                }
+                    
+                    // B. Resolve Interaction
+                    message += resolveSequentialInteraction(att, attName, def, defName);
 
-                // B. Resolve Interaction
-                message += resolveSequentialInteraction(att, attName, def, defName);
+                    // C. Apply penalty to the *other* player only if the interaction was non-decisive
+                    const interactionWasDecisive = message.includes("INTERRUPTS") || message.includes("BLOCKED") || message.includes("GRABS") || message.includes("PARRY's") || message.includes("FEINTS");
 
-                // C. Apply penalty to the *other* player only if the interaction was non-damaging/non-block 
-                // and the 'defender' in the interaction committed to a slow attack (which is now late).
-                if (att === activePlayer) { // Standard resolution (Faster player initiated)
-                    if (passivePlayer.move !== 'BLOCK' && passivePlayer.move !== 'DASH' && passivePlayer.move !== 'JUMP' && !message.includes("INTERRUPTS") && !message.includes("BLOCKED") && !message.includes("GRABS") && !message.includes("PARRY's")) {
+                    if (!interactionWasDecisive && !['BLOCK', 'DASH_FWD', 'DASH_BACK', 'JUMP', 'FEINT', 'PARRY'].includes(passivePlayer.move)) {
                         message += " | " + applyPenalty(passivePlayer, passiveName, passivePlayer.move, passiveData.onWhiffPenalty, `${passivePlayer.move} resolves late.`);
                     }
                 }
@@ -622,45 +740,46 @@
             } else {
                 // Priorities are equal (CLASH or Standoff)
                 
-                // --- FIX: Equal Priority Parry Fail Check (P0 vs P0) ---
-                // Check if P1 parries a non-attack move (e.g., PARRY vs DASH)
+                // --- Equal Priority Parry/Feint Fail Check ---
                 const p1ParryFails = P1.move === 'PARRY' && !ATTACK_MOVES.includes(P2.move);
-                // Check if P2 parries a non-attack move
                 const p2ParryFails = P2.move === 'PARRY' && !ATTACK_MOVES.includes(P1.move);
 
-                if (p1ParryFails) {
+                // Check for FEINT/PARRY clash vs non-attack/low priority
+                if (P1.move === 'FEINT' && P2.move === 'FEINT') {
+                    message += `Double FEINT! Standoff. Both gain 5 Meter.`;
+                    P1.meter = Math.min(MAX_METER, P1.meter + 5);
+                    P2.meter = Math.min(MAX_METER, P2.meter + 5);
+                } else if (p1ParryFails) {
                     P1.isSkippingTurn = 1;
                     P1.meter = Math.max(0, P1.meter + MOVESET.PARRY.onWhiffPenalty);
                     message += `<span class="text-neon-red">P1's PARRY misses P2's ${P2.move}! P1 loses next turn.</span>`;
-                    // Execute P2's move (e.g., DASH/BLOCK/JUMP)
-                    if (P2.move !== 'PARRY') {
+                    // Execute P2's move
+                    if (P2.move !== 'PARRY' && P2.move !== 'FEINT') {
                         message += " | " + applyPenalty(P2, 'P2', P2.move, p2FinalData.onHitAdvantage, `${P2.move} executes successfully.`);
                     }
-                } 
-                
-                if (p2ParryFails) {
+                } else if (p2ParryFails) {
                     P2.isSkippingTurn = 1;
                     P2.meter = Math.max(0, P2.meter + MOVESET.PARRY.onWhiffPenalty);
                     message += `<span class="text-neon-green">P2's PARRY misses P1's ${P1.move}! P2 loses next turn.</span>`;
-                    // Execute P1's move (e.g., DASH/BLOCK/JUMP), only if P1 didn't also fail PARRY
-                    if (P1.move !== 'PARRY') {
+                    // Execute P1's move
+                    if (P1.move !== 'PARRY' && P1.move !== 'FEINT') {
                         message += " | " + applyPenalty(P1, 'P1', P1.move, p1FinalData.onHitAdvantage, `${P1.move} executes successfully.`);
                     }
-                }
-                
-                // Only proceed to CLASH/Double PARRY/Standoff if neither PARRY failed this way
-                if (!p1ParryFails && !p2ParryFails) {
+                } else {
+                    // Normal P:3 vs P:3 clash (e.g. KICK vs THROW or KICK vs AERIAL_KICK)
                     const bothAttacks = ATTACK_MOVES.includes(P1.move) && ATTACK_MOVES.includes(P2.move);
                     const bothParry = P1.move === 'PARRY' && P2.move === 'PARRY';
 
                     if (bothAttacks) {
                         // Attack vs Attack: CLASH
-                        const damage = p1FinalData.damage / 2;
-                        P1.hp = Math.max(0, P1.hp - damage);
-                        P2.hp = Math.max(0, P2.hp - damage);
+                        const p1Dmg = p1FinalData.damage / 2;
+                        const p2Dmg = p2FinalData.damage / 2;
+
+                        P1.hp = Math.max(0, P1.hp - p2Dmg);
+                        P2.hp = Math.max(0, P2.hp - p1Dmg);
                         P1.meter = Math.min(MAX_METER, P1.meter + 5);
                         P2.meter = Math.min(MAX_METER, P2.meter + 5);
-                        message += `CLASH! Both attacks connect! Both take ${damage} damage.`;
+                        message += `CLASH! Both attacks connect! P1 takes ${p2Dmg} damage, P2 takes ${p1Dmg} damage.`;
                     } else if (bothParry) {
                         message += `Double PARRY! STALEMATE. Both gain 5 Meter.`;
                         P1.meter = Math.min(MAX_METER, P1.meter + 5);
@@ -685,8 +804,8 @@
                 P2.isCommitted = false;
                 
                 // P1/P2 are only airborne for the duration of the turn, reset status
-                P1.isAirborne = false; 
-                P2.isAirborne = false;
+                if (P1.isAirborne && P1.move !== 'JUMP') P1.isAirborne = false; 
+                if (P2.isAirborne && P2.move !== 'JUMP') P2.isAirborne = false;
 
                 // Call updateUI to transition back to the selection screen message
                 updateUI();
