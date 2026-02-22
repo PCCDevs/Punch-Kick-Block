@@ -185,17 +185,18 @@
 
     <script>
         const MAX_METER = 50;
-        const MIN_DISTANCE_TO_HIT = 5; 
+        const MIN_DISTANCE_TO_HIT = 4; 
         const DASH_DISTANCE = 2; 
         const FEAR_COST_MODIFIER = 5;
         const FEAR_CLIMAX_DISCOUNT = 10;
         const REST_METER_GAIN = 10; 
+        const DASHGAIN = 5;
         const REST_VULNERABILITY_BONUS_DAMAGE = 10; 
 
         const MOVES = {
             FEINT: { name: 'Feint', baseCost: 5, damage: 0, priority: 0, onHitAdvantage: 10, onWhiffPenalty: -5 }, 
-            DASH_FWD: { name: 'Fwd', baseCost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0, isNoFearMod: true }, 
-            DASH_BACK: { name: 'Back', baseCost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0, isNoFearMod: true }, 
+            DASH_FWD: { name: 'Fwd', baseCost: 0, damage: 0, priority: 0, onHitAdvantage: DASHGAIN, onWhiffPenalty: 0, isNoFearMod: true }, 
+            DASH_BACK: { name: 'Back', baseCost: 0, damage: 0, priority: 0, onHitAdvantage: DASHGAIN, onWhiffPenalty: 0, isNoFearMod: true }, 
             JUMP: { name: 'Jump', baseCost: 0, damage: 0, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0, isNoFearMod: true }, 
             PARRY: { name: 'Parry', baseCost: 5, damage: 0, priority: 0, onHitAdvantage: 15, onWhiffPenalty: -5, isParry: true }, 
             REST: { name: 'Rest', baseCost: 0, damage: 0, priority: 0, onHitAdvantage: REST_METER_GAIN, onWhiffPenalty: 0, isRest: true, isNoFearMod: true }, 
