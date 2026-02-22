@@ -368,8 +368,6 @@
                 execBtn.disabled = true;
                 execBtn.textContent = 'EXECUTING...';
                 setTimeout(processTurn, 600);
-                P1.meter = Math.Min(MAX_METER, P1.meter + 5);
-                P2.meter = Math.Min(MAX_METER, P2.meter + 5);
             } else {
                 execBtn.textContent = 'AWAITING PLAYERS...';
             }
