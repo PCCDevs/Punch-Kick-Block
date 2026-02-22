@@ -213,7 +213,7 @@
 
             SH_SMACK: { name: 'Smack', baseCost: 5, damage: 10, priority: 1, onHitAdvantage: 5, onWhiffPenalty: -5, isOffensive: true },
             SH_SHOTGUN: { name: 'Shotgun', baseCost: 10, damage: 5, antiAirDamage: 25, priority: 2, onHitAdvantage: 10, onWhiffPenalty: -10, isOffensive: true, isGun: true, hasProximityScaling: true },
-            SH_SHOOT: { name: 'Shoot', baseCost: 5, damage: 10, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0, isOffensive: true, isGun: true },
+            SH_SHOOT: { name: 'Shoot', baseCost: 0, damage: 10, priority: 0, onHitAdvantage: 5, onWhiffPenalty: 0, isOffensive: true, isGun: true },
             SH_SNIPE: { name: 'Snipe', baseCost: 5, damage: 20, priority: 3, onHitAdvantage: 10, onWhiffPenalty: -15, isOffensive: true, range: 10, isGun: true },
             SH_CHARGE: { name: 'Charge', baseCost: 5, damage: 0, priority: 0, onHitAdvantage: 0, onWhiffPenalty: 0, isCharge: true, isNoFearMod: true },
             SH_AKIMBO: { name: 'Akimbo', baseCost: 15, damage: 25, antiAirDamage: 40, priority: 4, onHitAdvantage: 15, onWhiffPenalty: -20, isOffensive: true, isGun: true, range: 10 },
@@ -368,8 +368,8 @@
                 execBtn.disabled = true;
                 execBtn.textContent = 'EXECUTING...';
                 setTimeout(processTurn, 600);
-                P1.meter += 5;
-                P2.meter += 5;
+                P1.meter = Math.Min(MAX_METER, P1.meter + 5);
+                P2.meter = Math.Min(MAX_METER, P2.meter + 5);
             } else {
                 execBtn.textContent = 'AWAITING PLAYERS...';
             }
