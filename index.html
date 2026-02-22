@@ -368,6 +368,8 @@
                 execBtn.disabled = true;
                 execBtn.textContent = 'EXECUTING...';
                 setTimeout(processTurn, 600);
+                const P1.meter = P1.meter + 5;
+                const P2.meter = P2.meter + 5;
             } else {
                 execBtn.textContent = 'AWAITING PLAYERS...';
             }
