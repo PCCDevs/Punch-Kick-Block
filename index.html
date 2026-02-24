@@ -445,16 +445,15 @@
             const p2IsAttacking = p2Data.isOffensive && isCloseEnough(p2Data, P2, P1);
 
             // Special Parry Logic for Guns at close range
-            if (p1Data.isParry && p2IsAttacking && distBefore <= 4) {
+            if (p1Data.isParry && p2IsAttacking && distBefore <= 5) {
                 P2.isSkippingTurn = Math.max(P2.isSkippingTurn, 1);
                 P1.meter = Math.min(MAX_METER, P1.meter + 15);
                 turnLog += "P1 PARRY! P2 STUNNED! ";
-            } else if (p2Data.isParry && p1IsAttacking && distBefore <= 4) {
+            } else if (p2Data.isParry && p1IsAttacking && distBefore <= 5) {
                 P1.isSkippingTurn = Math.max(P1.isSkippingTurn, 1);
                 P2.meter = Math.min(MAX_METER, P2.meter + 15);
                 turnLog += "P2 PARRY! P1 STUNNED! ";
             } 
-    
             // Standard Interaction Resolution
             else if (p1IsAttacking && p2IsAttacking) {
                 if (p1Data.priority > p2Data.priority) {
