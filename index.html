@@ -58,8 +58,34 @@
         @keyframes pulse-commit { from { opacity: 0.7; } to { opacity: 1; } }
         
         .character-icon { font-size: 3rem; transition: left 0.3s ease-in-out, transform 0.1s ease-in-out, bottom 0.3s ease-in-out, filter 0.1s; position: absolute; bottom: 10px; }
-        .character-icon.airborne { bottom: 60px !important; }
+        
+        /* JUMP ANIMATION DEFINITION */
+        @keyframes jump-arc {
+            0% { bottom: 10px; }
+            50% { bottom: 90px; }
+            100% { bottom: 10px; }
+        }
+        .animate-jump {
+            animation: jump-arc 0.7s ease-in-out forwards;
+        }
+
         .character-icon.flash { filter: drop-shadow(0 0 10px white) brightness(1.5); }
+
+        .jump-indicator {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #60a5fa;
+            white-space: nowrap;
+            animation: bounce 0.5s infinite alternate;
+        }
+
+        @keyframes bounce {
+            from { transform: translateX(-50%) translateY(0); }
+            to { transform: translateX(-50%) translateY(-5px); }
+        }
 
         .char-card { border: 4px solid #4b5563; transition: all 0.2s; cursor: pointer; }
         .char-card:hover { border-color: #9ca3af; transform: translateY(-5px); }
@@ -141,9 +167,15 @@
             </div>
         </div>
 
-        <div id="arena" class="relative h-32 bg-gray-900 border-4 border-gray-700 rounded-lg mb-6 flex items-center justify-center">
-            <div id="p1-char" class="character-icon text-neon-red" style="left: 10%;">👊</div>
-            <div id="p2-char" class="character-icon text-neon-green" style="left: 80%; transform: scaleX(-1);">🦵</div>
+        <div id="arena" class="relative h-48 bg-gray-900 border-4 border-gray-700 rounded-lg mb-6 flex items-center justify-center overflow-visible">
+            <div id="p1-char" class="character-icon text-neon-red" style="left: 10%;">
+                <span class="jump-indicator hidden">JUMP!</span>
+                👊
+            </div>
+            <div id="p2-char" class="character-icon text-neon-green" style="left: 80%; transform: scaleX(-1);">
+                <span class="jump-indicator hidden" style="transform: scaleX(-1) translateX(50%);">JUMP!</span>
+                🦵
+            </div>
             <div id="distance-indicator" class="text-xl text-yellow-400 absolute top-0 mt-2">Distance: 7</div>
         </div>
 
@@ -188,11 +220,11 @@
         const DASH_DISTANCE = 2; 
         const FEAR_COST_MODIFIER = 5;
         const FEAR_CLIMAX_DISCOUNT = 10;
-        const REST_METER_GAIN = 10; 
         const SUCCESS_METER_REWARD = 5;
+        const REST_HIT_PENALTY = 10; 
 
         const MOVES = {
-            FEINT: { name: 'Feint', baseCost: 5, damage: 0, priority: 0, onHitAdvantage: 10 }, 
+            FEINT: { name: 'Feint', baseCost: 5, damage: 0, priority: 0 }, 
             DASH_FWD: { name: 'Fwd', baseCost: 0, isMove: true }, 
             DASH_BACK: { name: 'Back', baseCost: 0, isMove: true }, 
             JUMP: { name: 'Jump', baseCost: 0, isMove: true }, 
@@ -200,8 +232,8 @@
             REST: { name: 'Rest', baseCost: 0, isRest: true }, 
             SKIPPED: { name: 'Skipped', baseCost: 0 }, 
             
-            AR_PUNCH: { name: 'Punch', baseCost: 0, damage: 10, priority: 1, onHitAdvantage: 5, isOffensive: true }, 
-            AR_UPPERCUT: { name: 'Uppercut', baseCost: 5, damage: 10, antiAirDamage: 20, priority: 2, onHitAdvantage: 10, isOffensive: true, isAntiAir: true }, 
+            AR_PUNCH: { name: 'Punch', baseCost: 0, damage: 10, priority: 1, isOffensive: true }, 
+            AR_UPPERCUT: { name: 'Uppercut', baseCost: 5, damage: 10, antiAirDamage: 20, priority: 2, isOffensive: true, isAntiAir: true }, 
             AR_SHOOT: { name: 'Shoot', baseCost: 5, damage: 10, priority: 2, isOffensive: true }, 
             AR_KICK: { name: 'Kick', baseCost: 10, damage: 25, priority: 3, isOffensive: true }, 
             AR_THROW: { name: 'Throw', baseCost: 10, damage: 15, priority: 3, isOffensive: true, isThrow: true },
@@ -279,7 +311,7 @@
             let cost = data.baseCost || 0;
             if (playerState.isFeared) {
                 if (data.isSuper) cost = Math.max(0, cost - FEAR_CLIMAX_DISCOUNT);
-                else if (!data.isNoFearMod) cost += FEAR_COST_MODIFIER;
+                else cost += FEAR_COST_MODIFIER;
             }
             return cost;
         }
@@ -327,17 +359,12 @@
             $('#p2-meter').textContent = `Meter: ${P2.meter}/${MAX_METER}`;
             $('#p1-char').style.left = `${P1.pos * 10}%`;
             $('#p2-char').style.left = `${P2.pos * 10}%`;
-            $('#p1-char').classList.toggle('airborne', P1.isAirborne); 
-            $('#p2-char').classList.toggle('airborne', P2.isAirborne);
+            
+            $('#p1-char .jump-indicator').classList.toggle('hidden', !P1.isAirborne);
+            $('#p2-char .jump-indicator').classList.toggle('hidden', !P2.isAirborne);
             
             $('#distance-indicator').textContent = `Distance: ${distance}`;
 
-            const p1Ready = P1.isCommitted || P1.isSkippingTurn > 0;
-            const p2Ready = P2.isCommitted || P2.isSkippingTurn > 0;
-
-            $('#p1-controls').classList.toggle('committed', P1.isCommitted);
-            $('#p2-controls').classList.toggle('committed', P2.isCommitted);
-            
             if (P1.isSkippingTurn > 0) {
                 $('#p1-status').textContent = `STUNNED (${P1.isSkippingTurn})`;
                 $('#p1-status').classList.remove('hidden');
@@ -358,13 +385,18 @@
                 $('#p2-status').classList.add('hidden');
             }
 
+            $('#p1-controls').classList.toggle('committed', P1.isCommitted || P1.isSkippingTurn > 0);
+            $('#p2-controls').classList.toggle('committed', P2.isCommitted || P2.isSkippingTurn > 0);
+
             if (P1.hp <= 0 || P2.hp <= 0) { endGame(); return; }
 
             const execBtn = $('#execute-button');
+            const p1Ready = P1.isCommitted || P1.isSkippingTurn > 0;
+            const p2Ready = P2.isCommitted || P2.isSkippingTurn > 0;
+
             if (p1Ready && p2Ready) {
                 execBtn.disabled = true;
                 execBtn.textContent = 'EXECUTING...';
-                setTimeout(processTurn, 800);
             } else {
                 execBtn.textContent = 'AWAITING PLAYERS...';
             }
@@ -377,6 +409,12 @@
             if (loserState.isAirborne && moveData?.antiAirDamage) {
                 totalDamage = moveData.antiAirDamage;
                 appendMsg += ` (ANTI-AIR!)`;
+            }
+
+            const loserMove = MOVES[loserState.move];
+            if (loserMove && loserMove.isRest) {
+                totalDamage += REST_HIT_PENALTY;
+                appendMsg += ` (REST PUNISH! +${REST_HIT_PENALTY})`;
             }
 
             if (moveData?.hasProximityScaling && currentDistance < 4) {
@@ -398,56 +436,80 @@
         }
 
         function processTurn() {
+            // State capture at start of turn
+            const p1PrevStun = P1.isSkippingTurn;
+            const p2PrevStun = P2.isSkippingTurn;
+
             if (P1.isSkippingTurn > 0) { P1.isSkippingTurn--; P1.move = 'SKIPPED'; }
             if (P2.isSkippingTurn > 0) { P2.isSkippingTurn--; P2.move = 'SKIPPED'; }
 
-            const p1Data = MOVES[P1.move];
-            const p2Data = MOVES[P2.move];
+            const p1Data = MOVES[P1.move] || MOVES.SKIPPED;
+            const p2Data = MOVES[P2.move] || MOVES.SKIPPED;
 
-            if (P1.move !== 'SKIPPED') P1.meter -= getMoveCost(P1.move, P1);
-            if (P2.move !== 'SKIPPED') P2.meter -= getMoveCost(P2.move, P2);
+            // Costs applied once
+            if (P1.move !== 'SKIPPED' && P1.move) P1.meter -= getMoveCost(P1.move, P1);
+            if (P2.move !== 'SKIPPED' && P2.move) P2.meter -= getMoveCost(P2.move, P2);
 
             let turnLog = "";
 
-            // Movement Logic
+            // Jump animation triggers
+            if (P1.move === 'JUMP') {
+                P1.isAirborne = true;
+                $('#p1-char').classList.add('animate-jump');
+                setTimeout(() => { P1.isAirborne = false; $('#p1-char').classList.remove('animate-jump'); }, 700);
+            }
+            if (P2.move === 'JUMP') {
+                P2.isAirborne = true;
+                $('#p2-char').classList.add('animate-jump');
+                setTimeout(() => { P2.isAirborne = false; $('#p2-char').classList.remove('animate-jump'); }, 700);
+            }
+
+            // Movement applied once
             if (P1.move === 'DASH_FWD') P1.pos = Math.min(P2.pos - 1, P1.pos + DASH_DISTANCE);
             else if (P1.move === 'DASH_BACK') P1.pos = Math.max(1, P1.pos - DASH_DISTANCE);
             
             if (P2.move === 'DASH_FWD') P2.pos = Math.max(P1.pos + 1, P2.pos - DASH_DISTANCE);
-            else if (P2.move === 'DASH_BACK') P2.pos = Math.min(9, P2.pos + DASH_DISTANCE);
-            
-            P1.isAirborne = P1.move === 'JUMP';
-            P2.isAirborne = P2.move === 'JUMP';
+            else if (P2.move === 'DASH_BACK') P2.pos = Math.min(9, P2.pos - DASH_DISTANCE);
 
             const dist = Math.abs(P2.pos - P1.pos);
 
             const checkHitEligibility = (atk, def, move) => {
+                if (!move || !move.isOffensive) return { can: false };
                 const range = move.range || MIN_DISTANCE_TO_HIT;
                 if (dist > range) return { can: false, reason: "whiffed (range)" };
                 if (def.isAirborne && !move.isAntiAir) return { can: false, reason: "missed (target jumping)" };
                 return { can: true };
             };
 
-            const p1Elig = p1Data.isOffensive ? checkHitEligibility(P1, P2, p1Data) : { can: false };
-            const p2Elig = p2Data.isOffensive ? checkHitEligibility(P2, P1, p2Data) : { can: false };
+            const p1Elig = checkHitEligibility(P1, P2, p1Data);
+            const p2Elig = checkHitEligibility(P2, P1, p2Data);
 
-            // Parry Logic
             let p1ParrySuccess = p1Data.isParry && p2Elig.can;
             let p2ParrySuccess = p2Data.isParry && p1Elig.can;
 
-            if (p1Data.isParry && !p1ParrySuccess) { P1.isSkippingTurn = 1; turnLog += "P1 failed parry - STUNNED! "; }
-            if (p2Data.isParry && !p2ParrySuccess) { P2.isSkippingTurn = 1; turnLog += "P2 failed parry - STUNNED! "; }
+            if (p1Data.isParry) {
+                if (p1ParrySuccess) {
+                    P2.isSkippingTurn = 1;
+                    P1.meter = Math.min(MAX_METER, P1.meter + 15 + SUCCESS_METER_REWARD);
+                    turnLog += "P1 PARRY SUCCESS! ";
+                } else {
+                    P1.isSkippingTurn = 1;
+                    turnLog += "P1 Parry whiffed - STUNNED! ";
+                }
+            }
 
-            if (p1ParrySuccess) {
-                P2.isSkippingTurn = 1;
-                P1.meter = Math.min(MAX_METER, P1.meter + 15 + SUCCESS_METER_REWARD);
-                turnLog += "P1 PARRY! ";
-            } else if (p2ParrySuccess) {
-                P1.isSkippingTurn = 1;
-                P2.meter = Math.min(MAX_METER, P2.meter + 15 + SUCCESS_METER_REWARD);
-                turnLog += "P2 PARRY! ";
-            } else {
-                // Combat Resolution
+            if (p2Data.isParry) {
+                if (p2ParrySuccess) {
+                    P1.isSkippingTurn = 1;
+                    P2.meter = Math.min(MAX_METER, P2.meter + 15 + SUCCESS_METER_REWARD);
+                    turnLog += "P2 PARRY SUCCESS! ";
+                } else {
+                    P2.isSkippingTurn = 1;
+                    turnLog += "P2 Parry whiffed - STUNNED! ";
+                }
+            }
+
+            if (!p1ParrySuccess && !p2ParrySuccess) {
                 if (p1Elig.can && p2Elig.can) {
                     if (p1Data.priority > p2Data.priority) turnLog += resolveHit(P1, 'P1', P2, p1Data.damage, 5, p1Data, dist);
                     else if (p2Data.priority > p1Data.priority) turnLog += resolveHit(P2, 'P2', P1, p2Data.damage, 5, p2Data, dist);
@@ -473,7 +535,7 @@
                 }
             }
 
-            // Passive Success Rewards
+            // Other effects applied once
             if (p1Data.isMove) P1.meter = Math.min(MAX_METER, P1.meter + SUCCESS_METER_REWARD);
             if (p2Data.isMove) P2.meter = Math.min(MAX_METER, P2.meter + SUCCESS_METER_REWARD);
             if (p1Data.isRest) { P1.meter = Math.min(MAX_METER, P1.meter + 10); turnLog += "P1 Rests. "; }
@@ -486,13 +548,10 @@
             if (p2Data.name === 'Feint') { P2.meter = Math.min(MAX_METER, P2.meter + 10 + SUCCESS_METER_REWARD); turnLog += "P2 Feints. "; }
 
             $('#status-message').textContent = turnLog || "Repositioning...";
-            setTimeout(resetTurnState, 1500);
-        }
-
-        function resetTurnState() {
+            
+            // Clean up turn state after execution
             P1.move = P2.move = null;
             P1.isCommitted = P2.isCommitted = false;
-            P1.isAirborne = P2.isAirborne = false;
             updateUI();
         }
 
@@ -504,6 +563,11 @@
             state.move = btn.dataset.move;
             state.isCommitted = true;
             updateUI();
+            
+            // Check if both players ready
+            if ((P1.isCommitted || P1.isSkippingTurn > 0) && (P2.isCommitted || P2.isSkippingTurn > 0)) {
+                setTimeout(processTurn, 800);
+            }
         }
 
         function handleCharSelect(e) {
