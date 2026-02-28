@@ -71,6 +71,46 @@
 
         .character-icon.flash { filter: drop-shadow(0 0 10px white) brightness(1.5); }
 
+        /* NEW ANIMATIONS */
+        @keyframes screen-shake-anim {
+            0% { transform: translate(2px, 2px) rotate(0deg); }
+            10% { transform: translate(-2px, -3px) rotate(-1deg); }
+            20% { transform: translate(-4px, 0px) rotate(1deg); }
+            30% { transform: translate(4px, 3px) rotate(0deg); }
+            40% { transform: translate(2px, -2px) rotate(1deg); }
+            50% { transform: translate(-2px, 3px) rotate(-1deg); }
+            60% { transform: translate(-4px, 2px) rotate(0deg); }
+            70% { transform: translate(4px, 2px) rotate(-1deg); }
+            80% { transform: translate(-2px, -2px) rotate(1deg); }
+            90% { transform: translate(2px, 3px) rotate(0deg); }
+            100% { transform: translate(2px, -3px) rotate(-1deg); }
+        }
+        .shake-active { animation: screen-shake-anim 0.4s ease-in-out; }
+
+        @keyframes melee-p1 {
+            0% { transform: translateX(0); }
+            30% { transform: translateX(-15px); }
+            60% { transform: translateX(40px); filter: brightness(1.5) drop-shadow(0 0 5px white); }
+            100% { transform: translateX(0); }
+        }
+        .animate-melee-p1 { animation: melee-p1 0.4s ease-out; z-index: 20; }
+
+        @keyframes melee-p2 {
+            0% { transform: scaleX(-1) translateX(0); }
+            30% { transform: scaleX(-1) translateX(-15px); }
+            60% { transform: scaleX(-1) translateX(40px); filter: brightness(1.5) drop-shadow(0 0 5px white); }
+            100% { transform: scaleX(-1) translateX(0); }
+        }
+        .animate-melee-p2 { animation: melee-p2 0.4s ease-out; z-index: 20; }
+
+        @keyframes gun-shoot-anim {
+            0% { opacity: 0; transform: translateX(-10px); }
+            20% { opacity: 1; transform: translateX(0) scale(1.3); filter: drop-shadow(0 0 15px #fcd34d) brightness(2); }
+            80% { opacity: 1; transform: translateX(0) scale(1); filter: none; }
+            100% { opacity: 0; transform: translateX(-10px); }
+        }
+        .animate-gun { display: block !important; animation: gun-shoot-anim 0.5s ease-out forwards; }
+
         .jump-indicator {
             position: absolute;
             top: -40px;
@@ -170,11 +210,17 @@
         <div id="arena" class="relative h-48 bg-gray-900 border-4 border-gray-700 rounded-lg mb-6 flex items-center justify-center overflow-visible">
             <div id="p1-char" class="character-icon text-neon-red" style="left: 10%;">
                 <span class="jump-indicator hidden">JUMP!</span>
-                👊
+                <span id="p1-emoji">👊</span>
+                <div class="gun-container hidden absolute top-1/2 -right-12 -translate-y-1/2 z-10">
+                    <span class="block text-4xl drop-shadow-lg" style="transform: scaleX(-1);">🔫</span>
+                </div>
             </div>
             <div id="p2-char" class="character-icon text-neon-green" style="left: 80%; transform: scaleX(-1);">
                 <span class="jump-indicator hidden" style="transform: scaleX(-1) translateX(50%);">JUMP!</span>
-                🦵
+                <span id="p2-emoji">🦵</span>
+                <div class="gun-container hidden absolute top-1/2 -right-12 -translate-y-1/2 z-10">
+                    <span class="block text-4xl drop-shadow-lg" style="transform: scaleX(-1);">🔫</span>
+                </div>
             </div>
             <div id="distance-indicator" class="text-xl text-yellow-400 absolute top-0 mt-2">Distance: 7</div>
         </div>
@@ -270,6 +316,8 @@
 
         let P1 = { hp: 100, meter: 0, move: null, pos: 1, isAirborne: false, isCommitted: false, isSkippingTurn: 0, isFeared: false, charId: null, chargeActive: false };
         let P2 = { hp: 100, meter: 0, move: null, pos: 9, isAirborne: false, isCommitted: false, isSkippingTurn: 0, isFeared: false, charId: null, chargeActive: false };
+
+        let globalShake = false;
 
         const $ = selector => document.querySelector(selector);
         const $$ = selector => document.querySelectorAll(selector);
@@ -432,11 +480,32 @@
             loserState.hp = Math.max(0, loserState.hp - totalDamage);
             winnerState.meter = Math.min(MAX_METER, winnerState.meter + meterGain + SUCCESS_METER_REWARD);
             
+            if (totalDamage >= 20) { globalShake = true; }
+
             return `${winnerName}: ${moveData.name} hits for ${totalDamage} dmg${appendMsg}. `;
+        }
+
+        function triggerGun(player) {
+            const charDiv = $(`#${player}-char`);
+            const gunContainer = charDiv.querySelector('.gun-container');
+            gunContainer.classList.remove('hidden');
+            gunContainer.classList.add('animate-gun');
+            setTimeout(() => {
+                gunContainer.classList.remove('animate-gun');
+                gunContainer.classList.add('hidden');
+            }, 500);
+        }
+
+        function triggerMelee(player) {
+            const charDiv = $(`#${player}-char`);
+            const animClass = player === 'p1' ? 'animate-melee-p1' : 'animate-melee-p2';
+            charDiv.classList.add(animClass);
+            setTimeout(() => charDiv.classList.remove(animClass), 400);
         }
 
         function processTurn() {
             // State capture at start of turn
+            globalShake = false;
             const p1PrevStun = P1.isSkippingTurn;
             const p2PrevStun = P2.isSkippingTurn;
 
@@ -469,7 +538,7 @@
             else if (P1.move === 'DASH_BACK') P1.pos = Math.max(1, P1.pos - DASH_DISTANCE);
             
             if (P2.move === 'DASH_FWD') P2.pos = Math.max(P1.pos + 1, P2.pos - DASH_DISTANCE);
-            else if (P2.move === 'DASH_BACK') P2.pos = Math.min(9, P2.pos - DASH_DISTANCE);
+            else if (P2.move === 'DASH_BACK') P2.pos = Math.min(9, P2.pos + DASH_DISTANCE);
 
             const dist = Math.abs(P2.pos - P1.pos);
 
@@ -547,6 +616,21 @@
             if (p1Data.name === 'Feint') { P1.meter = Math.min(MAX_METER, P1.meter + 10 + SUCCESS_METER_REWARD); turnLog += "P1 Feints. "; }
             if (p2Data.name === 'Feint') { P2.meter = Math.min(MAX_METER, P2.meter + 10 + SUCCESS_METER_REWARD); turnLog += "P2 Feints. "; }
 
+            if (P1.move !== 'SKIPPED') {
+                if (p1Data.isGun) triggerGun('p1');
+                else if (p1Data.isOffensive) triggerMelee('p1');
+            }
+            if (P2.move !== 'SKIPPED') {
+                if (p2Data.isGun) triggerGun('p2');
+                else if (p2Data.isOffensive) triggerMelee('p2');
+            }
+
+            if (globalShake) {
+                const gameContainer = $('#game-container');
+                gameContainer.classList.add('shake-active');
+                setTimeout(() => gameContainer.classList.remove('shake-active'), 400);
+            }
+
             $('#status-message').textContent = turnLog || "Repositioning...";
             
             // Clean up turn state after execution
@@ -589,6 +673,8 @@
             $('#game-container').classList.remove('hidden');
             $('#p1-char-name').textContent = CHARACTERS[P1.charId].name;
             $('#p2-char-name').textContent = CHARACTERS[P2.charId].name;
+            $('#p1-emoji').textContent = CHARACTERS[P1.charId].p1Icon;
+            $('#p2-emoji').textContent = CHARACTERS[P2.charId].p2Icon;
             renderPlayerControls('p1', CHARACTERS[P1.charId]);
             renderPlayerControls('p2', CHARACTERS[P2.charId]);
             updateUI();
